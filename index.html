@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ZIP Code Lookup</title>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; max-width: 400px; margin: auto; }
+    h2 { text-align: center; }
+    input, button { padding: 10px; font-size: 16px; width: 100%; margin-top: 10px; box-sizing: border-box; }
+    #result { font-weight: bold; margin-top: 20px; font-size: 18px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<h2>ZIP Code Lookup</h2>
+
+<input type="text" id="zipInput" placeholder="Enter ZIP Code" />
+<button onclick="lookup()">Search</button>
+
+<div id="result"></div>
+
+<script>
+  let data = [];
+  const csvUrls = [
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv', // Albuquerque, NM
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv', // Atlanta, GA
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1280736540&single=true&output=csv', // Austin, TX
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=131605005&single=true&output=csv', // Baton Rouge, LA
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1500753982&single=true&output=csv', // Boise, ID
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=446752663&single=true&output=csv', // Boston, MA
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=485353994&single=true&output=csv', // Central and Northern New Jersey
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=397950327&single=true&output=csv', // Central Florida (Orlando), FL
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=635144428&single=true&output=csv', // Central Indiana, IN
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1767838695&single=true&output=csv', // Central Texas (Waco), TX
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1076386464&single=true&output=csv', // Charleston, SC
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1710571999&single=true&output=csv', // Charlotte, NC
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1694979049&single=true&output=csv', // Chattanooga, TN
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1903462545&single=true&output=csv', // Cincinnati, OH
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1243184247&single=true&output=csv', // Colorado Springs, CO
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=417599010&single=true&output=csv', // Columbus (Central Ohio), OH
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=249363358&single=true&output=csv', // Corpus Christi, TX
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1996572760&single=true&output=csv', // Denver, CO
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2027496995&single=true&output=csv', // Detroit, MI
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=725540742&single=true&output=csv', // DFW - Dallas Fort Worth, TX
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1525185712&single=true&output=csv', // Fairfield, CT
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1550033892&single=true&output=csv', // Fort Myers - Naples, FL
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=963762001&single=true&output=csv'  // Greensboro, NC
+  ];
+
+  // Fetch all CSVs and merge data
+  Promise.all(csvUrls.map(url => fetch(url).then(res => res.text())))
+    .then(csvs => {
+      csvs.forEach(csvText => {
+        const rows = csvText.trim().split('\n');
+        rows.slice(1).forEach(row => { // skip header
+          const match = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+          if (!match) return;
+          const location = match[0].replace(/"/g,'').trim();
+          const zip = match[1].replace(/"/g,'').trim();
+          data.push({ zip, location });
+        });
+      });
+      console.log("Loaded ZIPs from all tabs:", data.length);
+    })
+    .catch(err => {
+      document.getElementById('result').textContent = "Error loading ZIP data";
+      console.error("CSV Load Error:", err);
+    });
+
+  function lookup() {
+    const zipInput = document.getElementById('zipInput').value.trim();
+    const resultDiv = document.getElementById('result');
+    if (!zipInput) { resultDiv.textContent = "Please enter a ZIP code"; return; }
+
+    const normalizedInput = zipInput.replace(/\s+/g, '');
+    const match = data.find(entry => entry.zip.replace(/\s+/g,'') === normalizedInput);
+
+    resultDiv.textContent = match ? "Location: " + match.location : "ZIP code not found";
+  }
+</script>
+
+</body>
+</html>
