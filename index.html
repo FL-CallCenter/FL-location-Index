@@ -74,7 +74,7 @@
         <input type="text" id="hubSearchInput" placeholder="Type or Browse City..." onfocus="showDropdown()" oninput="filterDropdown()">
         <div id="customDropdown"></div>
       </div>
-      <button id="searchBtn" onclick="lookup()" disabled>Syncing MoeGo Data...</button>
+      <button id="searchBtn" onclick="lookup()" disabled>Syncing Data...</button>
       <div id="result"></div>
     </div>
 
@@ -97,7 +97,6 @@
   let data = [];
   let markers = {};
   
-  // PASTE COORDINATES HERE
 const rawCoords = {
     "Central Indiana": [39.7684, -86.1581],
     "Columbus-Auburn": [32.4676, -84.9877],
@@ -258,7 +257,6 @@ const rawCoords = {
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
-  
   async function loadData() {
     try {
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
@@ -274,16 +272,6 @@ const rawCoords = {
     } catch (err) { console.error(err); }
   }
 
-  // --- IPHONE APP HANDSHAKE ---
-  function openAppOrWeb(url) {
-    // Attempt to force the MoeGo app via URL scheme
-    const appUrl = url.replace('https://', 'moego://');
-    window.location.href = appUrl;
-    
-    // Fallback: If app doesn't open in 500ms, open the web link
-    setTimeout(() => { window.open(url, '_top'); }, 500);
-  }
-
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
     markers = {};
@@ -293,7 +281,7 @@ const rawCoords = {
       if (city && rawCoords[city] && !plotted.has(city)) {
         plotted.add(city);
         const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
-        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br><div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div><button onclick="openAppOrWeb('${d.link}')" class="book-btn" style="border:none; cursor:pointer;">Open MoeGo</button></div>`);
+        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br><div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div><a href="${d.link}" target="_blank" rel="noopener noreferrer" class="action-link">OPEN MOEGO</a></div>`);
         markers[city] = marker;
       }
     });
@@ -344,7 +332,7 @@ const rawCoords = {
 
   function renderSingleRow(m) {
     const list = document.getElementById('location-list');
-    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><button onclick="openAppOrWeb('${m.link}')" class="action-link" style="border:none; cursor:pointer;">📅 OPEN APP</button></td></tr></tbody></table>`;
+    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
   }
 
   function displayStateLocations(code) {
@@ -356,7 +344,7 @@ const rawCoords = {
     const unique = Array.from(new Set(matches.map(m => m.city.trim()))).map(c => matches.find(m => m.city.trim() === c));
     if(unique.length > 0) {
       head.classList.remove('hidden'); head.innerText = `ACTIVE HUBS: ${searchCode}`;
-      list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody>${unique.map(m => `<tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><button onclick="openAppOrWeb('${m.link}')" class="action-link" style="border:none; cursor:pointer;">📅 BOOK</button></td></tr>`).join('')}</tbody></table>`;
+      list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody>${unique.map(m => `<tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td></tr>`).join('')}</tbody></table>`;
       window.scrollTo({ top: head.offsetTop - 20, behavior: 'smooth' });
     } else { head.classList.remove('hidden'); head.innerText = `NO DATA FOR ${searchCode}`; list.innerHTML = "<p style='padding:20px; color:#999;'>No hubs found for this state.</p>"; }
   }
