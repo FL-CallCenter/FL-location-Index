@@ -2,123 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FURRYLAND Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FURRYLAND Command Center</title>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
-    :root {
-      --fl-orange: #f07b23;
-      --fl-blue: #2576d0;
-      --fl-bg: #efeee9;
-      --fl-accent: #f2ffff;
-    }
-
-    body { 
-      font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
-      background-color: var(--fl-bg); 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      margin: 0;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-      width: 100%;
-      max-width: 380px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      background: #d1d1d1;
-      cursor: pointer;
-      font-weight: bold;
-      color: #555;
-      transition: 0.3s;
-    }
-
-    .tab-btn.active {
-      background: var(--fl-blue);
-      color: white;
-    }
-
-    .card {
-      background: white;
-      padding: 35px;
-      border-radius: 20px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      border-top: 6px solid var(--fl-orange);
-      box-sizing: border-box;
-    }
-
-    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 28px; }
-    p.subtitle { color: #444; font-size: 16px; margin: 2px 0; font-weight: 600; text-transform: uppercase; }
-    p.locator-text { color: var(--fl-blue); font-size: 13px; margin-top: 4px; margin-bottom: 25px; font-weight: 700; text-transform: uppercase; }
+    :root { --fl-orange: #f07b23; --fl-blue: #2576d0; --fl-bg: #efeee9; --fl-accent: #f2ffff; }
+    html { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--fl-bg); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
     
-    .input-group { position: relative; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; }
+    .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: #d1d1d1; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; font-size: 14px; }
+    .tab-btn.active { background: var(--fl-blue); color: white; box-shadow: 0 4px 10px rgba(37, 118, 208, 0.3); }
+
+    .card { background: white; padding: 25px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 400px; text-align: center; border-top: 6px solid var(--fl-orange); margin-bottom: 12px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; position: relative; }
+    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 26px; }
+    .subtitle { color: #444; font-size: 14px; margin: 2px 0 18px 0; font-weight: 600; text-transform: uppercase; }
     
-    input { 
-      padding: 15px 45px 15px 15px; 
-      font-size: 16px; 
-      width: 100%; 
-      border: 2px solid #ddd; 
-      border-radius: 10px; 
-      box-sizing: border-box;
-      background-color: var(--fl-accent);
-      outline: none;
-    }
-
-    .locate-btn {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 20px;
-      color: var(--fl-blue);
-    }
-
-    #searchBtn { 
-      padding: 15px; 
-      font-size: 16px; 
-      width: 100%; 
-      margin-top: 15px; 
-      background-color: var(--fl-orange); 
-      color: white; 
-      border: none; 
-      border-radius: 10px; 
-      cursor: pointer; 
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-
-    #result { margin-top: 10px; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
+    input { padding: 14px; font-size: 16px; width: 100%; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; background-color: var(--fl-accent); outline: none; margin-bottom: 10px; text-align: center; }
     
-    .location-label { color: #333; font-weight: 700; font-size: 18px; margin: 8px 0 12px 0; display: flex; align-items: center; justify-content: center; width: 100%; }
+    .search-container { position: relative; width: 100%; }
+    #customDropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; max-height: 220px; overflow-y: auto; z-index: 2000; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.15); margin-top: 5px; border: 1px solid #eee; }
+    .dropdown-item { padding: 14px; cursor: pointer; font-size: 15px; text-align: center; border-bottom: 1px solid #f5f5f5; }
+    .dropdown-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
+    
+    #searchBtn { padding: 14px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
+    #result { margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--fl-blue); min-height: 20px; }
 
-    .action-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
+    #list-header { color: var(--fl-blue); margin: 30px 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
+    #location-list { width: 100%; max-width: 1000px; background: white; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; margin-top: 10px; }
 
-    .btn-link { 
-      display: flex; align-items: center; justify-content: center;
-      color: white; text-decoration: none; font-size: 16px; font-weight: bold;
-      padding: 14px 25px; border-radius: 50px; width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-    }
-    .btn-link:active { transform: scale(0.97); }
+    .directory-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #eee; }
+    .directory-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; font-size: 14px; vertical-align: middle; }
+    .directory-table tr:hover { background-color: var(--fl-accent); }
 
-    .call-btn { background-color: var(--fl-blue); }
-    .book-btn { background-color: #28a745; }
+    .city-name { font-weight: 700; color: var(--fl-orange); font-size: 15px; }
+    .phone-text { font-family: monospace; font-size: 15px; color: #333; }
+    
+    .copy-btn { background: none; border: none; cursor: pointer; font-size: 14px; margin-left: 8px; color: #999; transition: 0.2s; }
+    .copy-btn:hover { color: var(--fl-blue); }
 
+    .action-link { text-decoration: none; font-weight: 700; color: #28a745; background: #e8f5e9; padding: 8px 16px; border-radius: 8px; font-size: 12px; transition: 0.2s; display: inline-block; }
+    .action-link:hover { background: #28a745; color: white; }
+
+    #map-wrapper { position: relative; width: 100%; max-width: 1000px; margin-top: 40px; margin-bottom: 50px; }
+    #map { height: 500px; width: 100%; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+    #resetMapBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    
+    .pulsing-marker { width: 10px; height: 10px; background-color: var(--fl-blue); border-radius: 50%; border: 2px solid white; position: relative; }
+    .pulsing-marker::after { content: ""; width: 100%; height: 100%; border: 3px solid var(--fl-blue); border-radius: 50%; position: absolute; top: -3px; left: -3px; animation: pulse 2.5s infinite ease-out; }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3); opacity: 0; } }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -129,58 +65,127 @@
   <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
 </div>
 
-<div id="locator-section" class="card">
-  <h2>FURRYLAND</h2>
-  <p class="subtitle">Mobile Grooming</p>
-  <p class="locator-text">Zip Code Locator</p>
-  
-  <div class="input-group">
-    <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
-    <button class="locate-btn" onclick="detectLocation()">📍</button>
-  </div>
-  
-  <button id="searchBtn" onclick="lookup()" disabled>Loading Data...</button>
+<div id="locator-section" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+    <div class="card">
+      <h2>FURRYLAND</h2>
+      <p class="subtitle">Search Hubs</p>
+      <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" inputmode="numeric">
+      <div class="search-container">
+        <input type="text" id="hubSearchInput" placeholder="Type or Browse City..." onfocus="showDropdown()" oninput="filterDropdown()">
+        <div id="customDropdown"></div>
+      </div>
+      <button id="searchBtn" onclick="lookup()" disabled>Syncing MoeGo Data...</button>
+      <div id="result"></div>
+    </div>
 
-  <div id="result">
-    <div id="statusMessage" style="color:var(--fl-blue);">Connecting to database...</div>
-  </div>
+    <p id="list-header" class="hidden">STATE DIRECTORY</p>
+    <div id="location-list"></div>
+
+    <div id="map-wrapper">
+      <button id="resetMapBtn" onclick="resetMap()">Reset USA View</button>
+      <div id="map"></div>
+    </div>
 </div>
 
 <div id="breed-section" class="card hidden">
   <h2>FURRYLAND</h2>
   <p class="subtitle">Breed Guide</p>
-  <p style="margin-top: 20px; color: #666;">Breed data coming soon!</p>
+  <p style="padding-top:20px; color:#666; font-size: 15px;">MoeGo Breed Database loading...</p>
 </div>
 
 <script>
   let data = [];
-  const defaultBookingUrl = "https://booking.moego.pet/?name=FurryLand";
+  let markers = {};
+  
+  // PASTE COORDINATES HERE
+const rawCoords = {
+    "Central Indiana": [39.7684, -86.1581],
+    "Columbus-Auburn": [32.4676, -84.9877],
+    "Columbus OH": [39.9612, -82.9988],
+    "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940],
+    "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
+    "NWA (Fayetteville)": [36.0822, -94.1719],
+    "Raleigh-Durham": [35.8900, -78.8500],
+    "Tyler-Longview": [32.3513, -95.3011],
+    "Palm Beach County": [26.7153, -80.0534],
+    "Green Bay-Appleton": [44.5191, -88.0198],
+    "Hartford": [41.7658, -72.6734],
+    "Tri-Cities": [36.5243, -82.3193],
+    "Sherman/Ada": [33.6357, -96.6089],
+    "NoVa Northern Virginia": [38.8462, -77.3064],
+    "Albuquerque": [35.0844, -106.6504],
+    "Atlanta": [33.7490, -84.3880],
+    "Austin": [30.2672, -97.7431],
+    "Baton Rouge": [30.4515, -91.1871],
+    "Beaumont": [30.0802, -94.1266],
+    "Boise": [43.6150, -116.2023],
+    "Boston": [42.3601, -71.0589],
+    "Central New Jersey": [40.5330, -74.4442],
+    "Central Florida (Orlando)": [28.5383, -81.3792],
+    "Charleston": [32.7765, -79.9311],
+    "Charlotte": [35.2271, -80.8431],
+    "Chattanooga": [35.0456, -85.3097],
+    "Cincinnati": [39.1031, -84.5120],
+    "Colorado Springs": [38.8339, -104.8214],
+    "Corpus Christi": [27.8006, -97.3964],
+    "Denver": [39.7392, -104.9903],
+    "Detroit": [42.3314, -83.0458],
+    "DFW - Dallas Fort Worth": [32.7767, -96.7970],
+    "Fairfield": [41.1412, -73.2637],
+    "Fort Myers": [26.6406, -81.8723],
+    "Greensboro": [36.0726, -79.7920],
+    "Houston": [29.7604, -95.3698],
+    "Huntsville": [34.7304, -86.5861],
+    "Knoxville": [35.9606, -83.9207],
+    "Las Vegas": [36.1699, -115.1398],
+    "Lexington": [38.0406, -84.5037],
+    "Little Rock": [34.7465, -92.2896],
+    "Louisville": [38.2527, -85.7585],
+    "Lubbock": [33.5779, -101.8552],
+    "Madison": [43.0731, -89.4012],
+    "Milwaukee": [43.0389, -87.9065],
+    "Nashville": [36.1627, -86.7816],
+    "Oklahoma City": [35.4676, -97.5164],
+    "Phoenix": [33.4484, -112.0740],
+    "Pittsburgh": [40.4406, -79.9959],
+    "Portland": [45.5152, -122.6784],
+    "Reno": [39.5296, -119.8138],
+    "Salt Lake City": [40.7608, -111.8910],
+    "San Antonio": [29.4241, -98.4936],
+    "Savannah": [32.0809, -81.0912],
+    "West Michigan": [42.9634, -85.6681],
+    "Wilmington": [34.2104, -77.8868],
+    "Cleveland": [41.4993, -81.6944],
+    "Omaha": [41.2565, -95.9345],
+    "Vermont": [44.5588, -72.5778],
+    "Augusta": [33.4735, -82.0105],
+    "Kansas City": [39.0997, -94.5786],
+    "Hartford/New Haven": [41.5367, -72.8059],
+    "Central Texas (Waco)": [31.5493, -97.1467]
+  };
 
-  function switchTab(tab) {
-    if (tab === 'locator') {
-      document.getElementById('locator-section').classList.remove('hidden');
-      document.getElementById('breed-section').classList.add('hidden');
-      document.getElementById('tab-loc').classList.add('active');
-      document.getElementById('tab-breed').classList.remove('active');
-    } else {
-      document.getElementById('locator-section').classList.add('hidden');
-      document.getElementById('breed-section').classList.remove('hidden');
-      document.getElementById('tab-loc').classList.remove('active');
-      document.getElementById('tab-breed').classList.add('active');
-    }
-  }
+  const stateCodes = { 'New Mexico': 'NM', 'Georgia': 'GA', 'Texas': 'TX', 'Louisiana': 'LA', 'Idaho': 'ID', 'Massachusetts': 'MA', 'New Jersey': 'NJ', 'Florida': 'FL', 'Indiana': 'IN', 'South Carolina': 'SC', 'North Carolina': 'NC', 'Tennessee': 'TN', 'Ohio': 'OH', 'Colorado': 'CO', 'Michigan': 'MI', 'Connecticut': 'CT', 'Pennsylvania': 'PA', 'Alabama': 'AL', 'Nevada': 'NV', 'Kentucky': 'KY', 'Arkansas': 'AR', 'Wisconsin': 'WI', 'Oklahoma': 'OK', 'Arizona': 'AZ', 'Oregon': 'OR', 'Nebraska': 'NE', 'Vermont': 'VT', 'Virginia': 'VA', 'Missouri': 'MO', 'Kansas': 'KS' };
 
-  function detectLocation() {
-    if (!navigator.geolocation) return alert("Geolocation not supported.");
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
-      const json = await res.json();
-      if (json.address.postcode) {
-        document.getElementById('zipInput').value = json.address.postcode.substring(0, 5);
-        lookup();
-      }
+  const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+  fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
+    .then(res => res.json())
+    .then(statesData => {
+      L.geoJson(statesData, {
+        style: { fillColor: '#e0e0e0', weight: 1.5, color: 'white', fillOpacity: 0.4 },
+        onEachFeature: (feature, layer) => {
+          layer.on({
+            mouseover: (e) => e.target.setStyle({ fillOpacity: 0.6, fillColor: '#2576d0' }),
+            mouseout: (e) => e.target.setStyle({ fillOpacity: 0.4, fillColor: '#e0e0e0' }),
+            click: (e) => { 
+                map.fitBounds(e.target.getBounds()); 
+                displayStateLocations(stateCodes[feature.properties.name] || feature.properties.name); 
+            }
+          });
+        }
+      }).addTo(map);
     });
-  }
 
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
@@ -253,81 +258,116 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
-
-  Promise.all(csvUrls.map(url => fetch(url).then(res => res.text())))
-    .then(csvs => {
-      csvs.forEach(csv => {
-        const rows = csv.trim().split('\n');
-        rows.slice(1).forEach(row => {
+  
+  async function loadData() {
+    try {
+      const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
+      responses.forEach(csv => {
+        csv.split('\n').slice(1).forEach(row => {
           const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-          if (m) {
-            data.push({
-              name: m[0].replace(/"/g,'').trim(),
-              zip: m[1].trim(),
-              phone: m[2]?.trim() || "No phone listed",
-              link: m[3]?.replace(/"/g,'').trim() || defaultBookingUrl
-            });
-          }
+          if (m) data.push({ name: m[0].replace(/"/g,'').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", link: m[3]?.replace(/"/g,'').trim() || "#", city: m[4]?.trim() || "", state: m[5]?.trim() || "" });
         });
       });
-      document.getElementById('statusMessage').textContent = "";
       document.getElementById('searchBtn').disabled = false;
       document.getElementById('searchBtn').textContent = "Search ZIP";
-    })
-    .catch(err => {
-      document.getElementById('statusMessage').textContent = "Error loading data.";
-      console.error(err);
-    });
-
-  function lookup() {
-    const zip = document.getElementById('zipInput').value.trim();
-    const match = data.find(d => d.zip === zip);
-    const resultDiv = document.getElementById('result');
-
-    if (match) {
-      resultDiv.innerHTML = `
-        <div class="location-label">📍 ${match.name}</div>
-        <div class="action-buttons">
-          <a href="tel:${match.phone}" class="btn-link call-btn">📞 Call ${match.phone}</a>
-          <a href="${match.link}" target="_blank" class="btn-link book-btn">📅 Book Now</a>
-        </div>
-      `;
-    } else {
-      resultDiv.innerHTML = "<p style='color:#666;'>No service in this ZIP yet!</p>";
-    }
+      plotHubs(); buildCustomDropdown();
+    } catch (err) { console.error(err); }
   }
 
-  function switchTab(tab) {
-    if (tab === 'locator') {
-      document.getElementById('locator-section').classList.remove('hidden');
-      document.getElementById('breed-section').classList.add('hidden');
-      document.getElementById('tab-loc').classList.add('active');
-      document.getElementById('tab-breed').classList.remove('active');
-    } else {
-      document.getElementById('locator-section').classList.add('hidden');
-      document.getElementById('breed-section').classList.remove('hidden');
-      document.getElementById('tab-loc').classList.remove('active');
-      document.getElementById('tab-breed').classList.add('active');
-    }
+  // --- IPHONE APP HANDSHAKE ---
+  function openAppOrWeb(url) {
+    // Attempt to force the MoeGo app via URL scheme
+    const appUrl = url.replace('https://', 'moego://');
+    window.location.href = appUrl;
+    
+    // Fallback: If app doesn't open in 500ms, open the web link
+    setTimeout(() => { window.open(url, '_top'); }, 500);
   }
 
-  function detectLocation() {
-    if (!navigator.geolocation) return alert("Geolocation not supported.");
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
-      const json = await res.json();
-      if (json.address.postcode) {
-        document.getElementById('zipInput').value = json.address.postcode.substring(0, 5);
-        lookup();
+  function plotHubs() {
+    for(let k in markers) map.removeLayer(markers[k]);
+    markers = {};
+    const plotted = new Set();
+    data.forEach(d => {
+      const city = d.city.trim();
+      if (city && rawCoords[city] && !plotted.has(city)) {
+        plotted.add(city);
+        const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
+        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br><div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div><button onclick="openAppOrWeb('${d.link}')" class="book-btn" style="border:none; cursor:pointer;">Open MoeGo</button></div>`);
+        markers[city] = marker;
       }
     });
   }
 
-  document.getElementById('zipInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') lookup();
-  });
+  function buildCustomDropdown() {
+    const dropdown = document.getElementById('customDropdown');
+    const cities = [...new Set(data.map(d => d.city.trim()))].filter(c => rawCoords[c]).sort();
+    dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>`).join('');
+  }
+
+  function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
+  function filterDropdown() {
+    const input = document.getElementById('hubSearchInput').value.toLowerCase();
+    const items = document.querySelectorAll('.dropdown-item');
+    items.forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
+  }
+
+  function selectCity(city) {
+    document.getElementById('hubSearchInput').value = city;
+    document.getElementById('customDropdown').style.display = 'none';
+    const match = data.find(d => d.city.trim() === city);
+    const head = document.getElementById('list-header');
+    if (match && rawCoords[city]) {
+      map.flyTo(rawCoords[city], 8);
+      if (markers[city]) markers[city].openPopup();
+      document.getElementById('result').innerText = "📍 Match Found: " + city;
+      head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
+      renderSingleRow(match);
+    }
+  }
+
+  function lookup() {
+    const zip = document.getElementById('zipInput').value.trim();
+    const match = data.find(d => d.zip === zip);
+    if (match) {
+      const city = match.city.trim();
+      document.getElementById('result').innerText = "📍 Match Found: " + city;
+      if (city && rawCoords[city]) {
+          map.flyTo(rawCoords[city], 8);
+          if (markers[city]) markers[city].openPopup();
+      }
+      document.getElementById('list-header').classList.remove('hidden');
+      document.getElementById('list-header').innerText = "SEARCH RESULT";
+      renderSingleRow(match);
+    } else { document.getElementById('result').innerText = "No service here yet!"; resetSearchState(); }
+  }
+
+  function renderSingleRow(m) {
+    const list = document.getElementById('location-list');
+    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><button onclick="openAppOrWeb('${m.link}')" class="action-link" style="border:none; cursor:pointer;">📅 OPEN APP</button></td></tr></tbody></table>`;
+  }
+
+  function displayStateLocations(code) {
+    const list = document.getElementById('location-list');
+    const head = document.getElementById('list-header');
+    const searchCode = code.trim().toUpperCase();
+    const fullName = Object.keys(stateCodes).find(k => stateCodes[k] === searchCode)?.toUpperCase() || "";
+    const matches = data.filter(d => { const s = d.state.trim().toUpperCase(); return s === searchCode || s === fullName; });
+    const unique = Array.from(new Set(matches.map(m => m.city.trim()))).map(c => matches.find(m => m.city.trim() === c));
+    if(unique.length > 0) {
+      head.classList.remove('hidden'); head.innerText = `ACTIVE HUBS: ${searchCode}`;
+      list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody>${unique.map(m => `<tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><button onclick="openAppOrWeb('${m.link}')" class="action-link" style="border:none; cursor:pointer;">📅 BOOK</button></td></tr>`).join('')}</tbody></table>`;
+      window.scrollTo({ top: head.offsetTop - 20, behavior: 'smooth' });
+    } else { head.classList.remove('hidden'); head.innerText = `NO DATA FOR ${searchCode}`; list.innerHTML = "<p style='padding:20px; color:#999;'>No hubs found for this state.</p>"; }
+  }
+
+  function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); map.setView([39.82, -98.57], 4); setTimeout(() => { document.getElementById('result').innerText = ""; }, 2500); }
+  function copyToClipboard(text) { navigator.clipboard.writeText(text); alert('Number copied!'); }
+  function resetMap() { map.setView([39.82, -98.57], 4); document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); document.getElementById('result').innerText = ""; }
+  function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
+  window.onclick = (e) => { if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none'; }
+  document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
+  loadData();
 </script>
 </body>
 </html>
-
-
