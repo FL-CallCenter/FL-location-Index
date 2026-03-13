@@ -330,9 +330,35 @@ const rawCoords = {
     } else { document.getElementById('result').innerText = "No service here yet!"; resetSearchState(); }
   }
 
-  function renderSingleRow(m) {
+ function renderSingleRow(m) {
     const list = document.getElementById('location-list');
-    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+    // Check if the hub name has extra info (like "Owner Approval")
+    const specialNote = m.name !== m.city ? `<span class="badge">${m.name}</span>` : "";
+    
+    list.innerHTML = `
+      <table class="directory-table">
+        <thead>
+          <tr>
+            <th>Hub Location</th>
+            <th>Phone Number</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="city-name">${m.city}</span>
+              ${specialNote}
+            </td>
+            <td>
+              <span class="phone-text">${m.phone}</span>
+              <button class="copy-btn" onclick="copyToClipboard('${m.phone}')" title="Copy Number">📋</button>
+            </td>
+            <td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
   }
 
   function displayStateLocations(code) {
@@ -340,13 +366,58 @@ const rawCoords = {
     const head = document.getElementById('list-header');
     const searchCode = code.trim().toUpperCase();
     const fullName = Object.keys(stateCodes).find(k => stateCodes[k] === searchCode)?.toUpperCase() || "";
-    const matches = data.filter(d => { const s = d.state.trim().toUpperCase(); return s === searchCode || s === fullName; });
-    const unique = Array.from(new Set(matches.map(m => m.city.trim()))).map(c => matches.find(m => m.city.trim() === c));
+    
+    const matches = data.filter(d => { 
+        const s = d.state.trim().toUpperCase(); 
+        return s === searchCode || s === fullName; 
+    });
+
+    // NEW LOGIC: Unique by City AND Name so "Milwaukee County" stays separate from "Milwaukee"
+    const unique = [];
+    const seen = new Set();
+
+    matches.forEach(m => {
+      const identifier = `${m.city}-${m.name}`.toLowerCase().trim();
+      if (!seen.has(identifier)) {
+        seen.add(identifier);
+        unique.push(m);
+      }
+    });
+
     if(unique.length > 0) {
-      head.classList.remove('hidden'); head.innerText = `ACTIVE HUBS: ${searchCode}`;
-      list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody>${unique.map(m => `<tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td></tr>`).join('')}</tbody></table>`;
+      head.classList.remove('hidden'); 
+      head.innerText = `ACTIVE HUBS: ${searchCode}`;
+      list.innerHTML = `
+        <table class="directory-table">
+          <thead>
+            <tr>
+              <th>Hub Location</th>
+              <th>Phone Number</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${unique.map(m => {
+              const specialNote = m.name !== m.city ? `<span class="badge" style="font-size:10px; background:#fff3e0; color:#e65100; padding:2px 6px; border-radius:4px; border:1px solid #ffe0b2; margin-left:8px;">${m.name}</span>` : "";
+              return `
+              <tr>
+                <td><span class="city-name">${m.city}</span>${specialNote}</td>
+                <td>
+                  <span class="phone-text">${m.phone}</span>
+                  <button class="copy-btn" onclick="copyToClipboard('${m.phone}')" title="Copy Number">📋</button>
+                </td>
+                <td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
       window.scrollTo({ top: head.offsetTop - 20, behavior: 'smooth' });
-    } else { head.classList.remove('hidden'); head.innerText = `NO DATA FOR ${searchCode}`; list.innerHTML = "<p style='padding:20px; color:#999;'>No hubs found for this state.</p>"; }
+    } else { 
+      head.classList.remove('hidden'); 
+      head.innerText = `NO DATA FOR ${searchCode}`; 
+      list.innerHTML = "<p style='padding:20px; color:#999;'>No hubs found for this state.</p>"; 
+    }
   }
 
   function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); map.setView([39.82, -98.57], 4); setTimeout(() => { document.getElementById('result').innerText = ""; }, 2500); }
@@ -359,3 +430,4 @@ const rawCoords = {
 </script>
 </body>
 </html>
+
