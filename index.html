@@ -96,7 +96,8 @@
 <script>
   let data = [];
   let markers = {};
-  
+
+  // --- YOUR DATA CONFIG ---
 const rawCoords = {
     "Central Indiana": [39.7684, -86.1581],
     "Columbus-Auburn": [32.4676, -84.9877],
@@ -162,29 +163,6 @@ const rawCoords = {
     "Hartford/New Haven": [41.5367, -72.8059],
     "Central Texas (Waco)": [31.5493, -97.1467]
   };
-
-  const stateCodes = { 'New Mexico': 'NM', 'Georgia': 'GA', 'Texas': 'TX', 'Louisiana': 'LA', 'Idaho': 'ID', 'Massachusetts': 'MA', 'New Jersey': 'NJ', 'Florida': 'FL', 'Indiana': 'IN', 'South Carolina': 'SC', 'North Carolina': 'NC', 'Tennessee': 'TN', 'Ohio': 'OH', 'Colorado': 'CO', 'Michigan': 'MI', 'Connecticut': 'CT', 'Pennsylvania': 'PA', 'Alabama': 'AL', 'Nevada': 'NV', 'Kentucky': 'KY', 'Arkansas': 'AR', 'Wisconsin': 'WI', 'Oklahoma': 'OK', 'Arizona': 'AZ', 'Oregon': 'OR', 'Nebraska': 'NE', 'Vermont': 'VT', 'Virginia': 'VA', 'Missouri': 'MO', 'Kansas': 'KS' };
-
-  const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-  fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
-    .then(res => res.json())
-    .then(statesData => {
-      L.geoJson(statesData, {
-        style: { fillColor: '#e0e0e0', weight: 1.5, color: 'white', fillOpacity: 0.4 },
-        onEachFeature: (feature, layer) => {
-          layer.on({
-            mouseover: (e) => e.target.setStyle({ fillOpacity: 0.6, fillColor: '#2576d0' }),
-            mouseout: (e) => e.target.setStyle({ fillOpacity: 0.4, fillColor: '#e0e0e0' }),
-            click: (e) => { 
-                map.fitBounds(e.target.getBounds()); 
-                displayStateLocations(stateCodes[feature.properties.name] || feature.properties.name); 
-            }
-          });
-        }
-      }).addTo(map);
-    });
 
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
@@ -258,25 +236,151 @@ const rawCoords = {
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
   ];
+
+  const stateCodes = { 'New Mexico': 'NM', 'Georgia': 'GA', 'Texas': 'TX', 'Louisiana': 'LA', 'Idaho': 'ID', 'Massachusetts': 'MA', 'New Jersey': 'NJ', 'Florida': 'FL', 'Indiana': 'IN', 'South Carolina': 'SC', 'North Carolina': 'NC', 'Tennessee': 'TN', 'Ohio': 'OH', 'Colorado': 'CO', 'Michigan': 'MI', 'Connecticut': 'CT', 'Pennsylvania': 'PA', 'Alabama': 'AL', 'Nevada': 'NV', 'Kentucky': 'KY', 'Arkansas': 'AR', 'Wisconsin': 'WI', 'Oklahoma': 'OK', 'Arizona': 'AZ', 'Oregon': 'OR', 'Nebraska': 'NE', 'Vermont': 'VT', 'Virginia': 'VA', 'Missouri': 'MO', 'Kansas': 'KS' };
+
+  const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+  fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
+    .then(res => res.json())
+    .then(statesData => {
+      L.geoJson(statesData, {
+        style: { fillColor: '#e0e0e0', weight: 1.5, color: 'white', fillOpacity: 0.4 },
+        onEachFeature: (feature, layer) => {
+          layer.on({
+            mouseover: (e) => e.target.setStyle({ fillOpacity: 0.6, fillColor: '#2576d0' }),
+            mouseout: (e) => e.target.setStyle({ fillOpacity: 0.4, fillColor: '#e0e0e0' }),
+            click: (e) => { 
+                map.fitBounds(e.target.getBounds()); 
+                displayStateLocations(stateCodes[feature.properties.name] || feature.properties.name); 
+            }
+          });
+        }
+      }).addTo(map);
+    });
+
+  // --- 1. DATA LOADING ENGINE ---
   async function loadData() {
     try {
+      data = []; // Reset array
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
+      
       responses.forEach(csv => {
-        csv.split('\n').slice(1).forEach(row => {
-          const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-          if (m) data.push({ name: m[0].replace(/"/g,'').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", link: m[3]?.replace(/"/g,'').trim() || "#", city: m[4]?.trim() || "", state: m[5]?.trim() || "" });
+        const rows = csv.split('\n');
+        rows.slice(1).forEach(row => {
+          const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+          if (m && m.length >= 5) {
+            data.push({ 
+              name: m[0].replace(/"/g, '').trim(), 
+              zip: m[1].trim(), 
+              phone: m[2]?.trim() || "No phone", 
+              link: m[3]?.replace(/"/g, '').trim() || "#", 
+              city: m[4]?.trim() || "",
+              state: m[5]?.trim() || "", // This was index 5
+              lat: m[6]?.trim() || null, 
+              lng: m[7]?.replace(/\r/g, '').trim() || null 
+            });
+          }
         });
       });
+
       document.getElementById('searchBtn').disabled = false;
       document.getElementById('searchBtn').textContent = "Search ZIP";
-      plotHubs(); buildCustomDropdown();
-    } catch (err) { console.error(err); }
+      
+      plotHubs(); 
+      buildCustomDropdown();
+      console.log("Precision Data Loaded. Total Rows:", data.length);
+    } catch (err) { 
+      console.error("Load Error: ", err); 
+    }
   }
 
+  // --- 2. THE SEARCH BRAIN ---
+async function lookup() {
+  const zip = document.getElementById('zipInput').value.trim();
+  const res = document.getElementById('result');
+  const head = document.getElementById('list-header');
+  const list = document.getElementById('location-list');
+  
+  // Clear previous results immediately
+  list.innerHTML = ""; 
+  res.innerHTML = "";
+
+  // 1. EXACT MATCH logic
+  const match = data.find(d => d.zip === zip);
+  if (match) {
+    res.innerText = "📍 Exact Match Found: " + match.city;
+    head.classList.remove('hidden');
+    head.innerText = "SEARCH RESULT";
+    renderSingleRow(match, false); 
+    const flyLat = match.lat ? parseFloat(match.lat) : (rawCoords[match.city] ? rawCoords[match.city][0] : null);
+    const flyLng = match.lng ? parseFloat(match.lng) : (rawCoords[match.city] ? rawCoords[match.city][1] : null);
+    if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 12);
+    return;
+  }
+
+  // 2. NEIGHBOR SEARCH logic
+  if (zip.length === 5) {
+    res.innerText = "🔍 Checking nearby...";
+    try {
+      const response = await fetch(`https://api.zippopotam.us/us/${zip}`);
+      if (!response.ok) throw new Error();
+      const zipData = await response.json();
+      const targetLat = parseFloat(zipData.places[0].latitude);
+      const targetLon = parseFloat(zipData.places[0].longitude);
+
+      let closestDist = Infinity;
+      let closestRow = null;
+
+      data.forEach(row => {
+        let rowLat = row.lat ? parseFloat(row.lat) : (rawCoords[row.city] ? rawCoords[row.city][0] : null);
+        let rowLng = row.lng ? parseFloat(row.lng) : (rawCoords[row.city] ? rawCoords[row.city][1] : null);
+        if (rowLat && rowLng) {
+          const dist = getDistance(targetLat, targetLon, rowLat, rowLng);
+          if (dist < closestDist) { closestDist = dist; closestRow = row; }
+        }
+      });
+
+      if (closestRow && closestDist <= 8) { 
+        res.innerHTML = `<span style="color: #c53030;">🛑 Not in list, but <strong>${closestDist.toFixed(1)} miles</strong> from ZIP ${closestRow.zip}.</span>`;
+        head.classList.remove('hidden');
+        head.innerText = "NEIGHBOR ALERT";
+        
+        // --- UPDATED RED BOX WITH SPACING ---
+        list.innerHTML = `
+            <div style="background: #fff5f5; padding: 25px; border-radius: 15px; text-align: center; color: #c53030; margin-bottom: 20px; border: 2px solid #feb2b2; line-height: 1.8;">
+                <strong style="font-size: 19px; color: #9b2c2c; display: block; margin-bottom: 10px;">🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong>
+                <span style="font-size: 15px;">
+                  ZIP ${zip} is <strong>${closestDist.toFixed(1)} miles</strong> from our <strong>ZIP ${closestRow.zip}</strong> route.
+                </span>
+                <br>
+                <strong style="font-size: 16px; display: block; margin-top: 15px; color: #9b2c2c; background: #fed7d7; padding: 10px; border-radius: 8px;">
+                  Ask the SLACK CHANNEL if this is serviceable.
+                </strong>
+            </div>`;
+            
+        renderSingleRow(closestRow, true); 
+        let flyLat = closestRow.lat ? parseFloat(closestRow.lat) : rawCoords[closestRow.city][0];
+        let flyLng = closestRow.lng ? parseFloat(closestRow.lng) : rawCoords[closestRow.city][1];
+        map.flyTo([flyLat, flyLng], 10);
+      } else {
+        res.innerText = "❌ No service within range.";
+        resetSearchState();
+      }
+    } catch (e) { 
+      res.innerText = "❌ Invalid ZIP or Connection Error."; 
+      resetSearchState(); 
+    }
+  }
+}
+
+  // --- 3. VISUAL HELPERS ---
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
     markers = {};
     const plotted = new Set();
+    
     data.forEach(d => {
       const city = d.city.trim();
       if (city && rawCoords[city] && !plotted.has(city)) {
@@ -290,7 +394,7 @@ const rawCoords = {
 
   function buildCustomDropdown() {
     const dropdown = document.getElementById('customDropdown');
-    const cities = [...new Set(data.map(d => d.city.trim()))].filter(c => rawCoords[c]).sort();
+    const cities = [...new Set(data.map(d => d.city.trim()))].filter(c => c && rawCoords[c]).sort();
     dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>`).join('');
   }
 
@@ -315,53 +419,41 @@ const rawCoords = {
     }
   }
 
-  function lookup() {
-    const zip = document.getElementById('zipInput').value.trim();
-    const match = data.find(d => d.zip === zip);
-    if (match) {
-      const city = match.city.trim();
-      document.getElementById('result').innerText = "📍 Match Found: " + city;
-      if (city && rawCoords[city]) {
-          map.flyTo(rawCoords[city], 8);
-          if (markers[city]) markers[city].openPopup();
-      }
-      document.getElementById('list-header').classList.remove('hidden');
-      document.getElementById('list-header').innerText = "SEARCH RESULT";
-      renderSingleRow(match);
-    } else { document.getElementById('result').innerText = "No service here yet!"; resetSearchState(); }
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 3958.8; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; 
   }
 
- function renderSingleRow(m) {
+function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
-    // Check if the hub name has extra info (like "Owner Approval")
-    const specialNote = m.name !== m.city ? `<span class="badge">${m.name}</span>` : "";
+    const name = m.name && m.name !== m.city ? m.name : m.city;
     
-    list.innerHTML = `
+    // Changed from Blue to a Muted Red/Grey for better "Warning" vibes
+    const statusBadge = isNeighbor ? 
+        `<span style="background: #718096; color: white; padding: 3px 10px; border-radius: 6px; font-size: 11px; margin-left: 12px; vertical-align: middle; font-weight: 800;">INQUIRY ONLY</span>` : "";
+
+    list.innerHTML += `
       <table class="directory-table">
-        <thead>
-          <tr>
-            <th>Hub Location</th>
-            <th>Phone Number</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
         <tbody>
           <tr>
-            <td>
-              <span class="city-name">${m.city}</span>
-              ${specialNote}
-            </td>
+            <td><span class="city-name">${name}</span>${statusBadge}</td>
             <td>
               <span class="phone-text">${m.phone}</span>
-              <button class="copy-btn" onclick="copyToClipboard('${m.phone}')" title="Copy Number">📋</button>
+              <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button>
             </td>
             <td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td>
           </tr>
         </tbody>
-      </table>
-    `;
-  }
-
+      </table>`;
+}
+  
   function displayStateLocations(code) {
     const list = document.getElementById('location-list');
     const head = document.getElementById('list-header');
@@ -369,11 +461,10 @@ const rawCoords = {
     const fullName = Object.keys(stateCodes).find(k => stateCodes[k] === searchCode)?.toUpperCase() || "";
     
     const matches = data.filter(d => { 
-        const s = d.state.trim().toUpperCase(); 
+        const s = (d.state || "").trim().toUpperCase(); 
         return s === searchCode || s === fullName; 
     });
 
-    // NEW LOGIC: Unique by City AND Name so "Milwaukee County" stays separate from "Milwaukee"
     const unique = [];
     const seen = new Set();
 
@@ -425,10 +516,9 @@ const rawCoords = {
   function copyToClipboard(text) { navigator.clipboard.writeText(text); alert('Number copied!'); }
   function resetMap() { map.setView([39.82, -98.57], 4); document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); document.getElementById('result').innerText = ""; }
   function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
+  
   window.onclick = (e) => { if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none'; }
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
+  
   loadData();
 </script>
-</body>
-</html>
-
