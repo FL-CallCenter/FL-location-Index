@@ -95,7 +95,7 @@
         position: relative;
         z-index: 1000;
         transition: transform 0.3s ease;
-    }    
+    }   
     
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 26px; }
     .subtitle { color: #222; font-size: 14px; margin: 2px 0 18px 0; font-weight: 600; text-transform: uppercase; }
@@ -325,7 +325,6 @@ function resetVibe() {
             }
         });
         buildBreedDropdown();
-        console.log("✅ Breed CSV Loaded: " + breedDatabase.length + " breeds.");
     } catch (err) { console.error("❌ Breed Load Failed:", err); }
   }
 
@@ -374,9 +373,16 @@ function resetVibe() {
                         const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
                         if (m && m.length >= 5) {
                             data.push({ 
-                                name: m[0].replace(/"/g, '').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", 
-                                link: m[3]?.replace(/"/g, '').trim() || "#", city: m[4]?.trim() || "",
-                                state: m[5]?.trim() || "", lat: m[6]?.trim() || null, lng: m[7]?.replace(/\r/g, '').trim() || null 
+                                name: m[0].replace(/"/g, '').trim(), 
+                                zip: m[1].trim(), 
+                                phone: m[2]?.trim() || "No phone", 
+                                link: m[3]?.replace(/"/g, '').trim() || "#", 
+                                city: m[4]?.trim() || "",
+                                state: m[5]?.trim() || "", 
+                                lat: m[6]?.trim() || null, 
+                                lng: m[7]?.replace(/\r/g, '').trim() || null,
+                                // NEW: Grab column 9 if it exists, otherwise empty
+                                closureNote: m[8] ? m[8].replace(/"/g, '').trim() : ""
                             });
                         }
                     });
@@ -392,8 +398,6 @@ function resetVibe() {
         buildCustomDropdown();
     } catch (err) { 
         console.error("Sync Error:", err);
-        document.getElementById('searchBtn').disabled = false;
-        document.getElementById('searchBtn').textContent = "Search ZIP";
     }
   }
 
@@ -412,7 +416,6 @@ function resetVibe() {
         head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
         renderSingleRow(match, false);
 
-        // --- HUB-FIRST PIN ZOOM ---
         let hubCoords = rawCoords[match.city]; 
         let flyLat = hubCoords ? hubCoords[0] : (match.lat ? parseFloat(match.lat) : null);
         let flyLng = hubCoords ? hubCoords[1] : (match.lng ? parseFloat(match.lng) : null);
@@ -448,7 +451,6 @@ function resetVibe() {
                 </div>`;
                 renderSingleRow(closestRow, true);
                 
-                // --- NEIGHBOR HUB PIN ZOOM ---
                 let hubCoords = rawCoords[closestRow.city];
                 let fLat = hubCoords ? hubCoords[0] : parseFloat(closestRow.lat);
                 let fLng = hubCoords ? hubCoords[1] : parseFloat(closestRow.lng);
@@ -491,11 +493,43 @@ function resetVibe() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
   }
 
-  // --- FULL RESULTS TABLE (With Phone & Copy Button) ---
+  // --- REPLACED: DUAL-MESSAGE TABLE LOGIC ---
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
-    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+    
+    let alertBox = "";
+
+    // 1. Check for RED Closure message from spreadsheet
+    if (m.closureNote && m.closureNote.length > 2) {
+      alertBox = `
+        <div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">
+          🛑 MAJOR ROAD CLOSURE<br>
+          <span style="font-weight:normal; font-size:13px;">${m.closureNote}</span>
+        </div>
+      `;
+    } 
+    // 2. Otherwise, show BLUE Traffic message for everyone else (but not neighbors)
+    else if (!isNeighbor) {
+      alertBox = `
+        <div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">
+          📢 TRAFFIC ADVISORY: Advise client that local traffic may affect arrival times.
+        </div>
+      `;
+    }
+
+    list.innerHTML = `
+      ${alertBox}
+      <table class="directory-table">
+        <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="city-name">${m.city}</span>${badge}</td>
+            <td>${m.phone} <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td>
+            <td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
+          </tr>
+        </tbody>
+      </table>`;
   }
 
   function buildCustomDropdown() {
@@ -529,8 +563,6 @@ function switchTab(t) {
     document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); 
     document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); 
     document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); 
-    
-    // Removed resetVibe() call to keep the atmosphere active
     if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); 
 }
 
@@ -541,10 +573,9 @@ function switchTab(t) {
 
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
 
-  // --- STARTUP ---
   async function startup() {
-    await loadBreeds(); // Instantly load Breed Guide
-    loadData(); // Backgroud Sync ZIPs
+    await loadBreeds();
+    loadData(); 
   }
   startup();
 </script>
