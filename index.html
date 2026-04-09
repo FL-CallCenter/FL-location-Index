@@ -12,7 +12,7 @@
     :root { 
         --fl-orange: #f07b23; 
         --fl-blue: #2576d0; 
-        --fl-bg: #0f172a; /* Midnight Navy Base */
+        --fl-bg: #0f172a; 
         --fl-accent: #f2ffff; 
     }
     
@@ -20,7 +20,7 @@
 
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: var(--fl-bg); /* Permanent Dark Navy */
+        background: var(--fl-bg);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -31,7 +31,6 @@
         overflow-x: hidden;
     }
 
-    /* THE ALWAYS-ON BLENDED ATMOSPHERE */
     body::before {
         content: "";
         position: fixed;
@@ -41,10 +40,8 @@
           radial-gradient(circle at 85% 85%, rgba(240, 123, 35, 0.08) 0%, transparent 50%);
         pointer-events: none;
         z-index: -1;
-        opacity: 1; 
     }
 
-    /* Breed Guide Result Alerts */
     .result-display {
         padding: 20px;
         border-radius: 12px;
@@ -56,7 +53,7 @@
         border: 3px solid transparent;
         box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         animation: popIn 0.3s ease-out;
-        width: 100%; /* Stretch to wider card */
+        width: 100%;
         box-sizing: border-box;
     }
 
@@ -65,7 +62,6 @@
 
     @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-    /* Tabs - Glass Look for Dark Mode */
     .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 95%; max-width: 550px; z-index: 1010; }
     .tab-btn { 
         flex: 1; padding: 12px; border: none; border-radius: 12px; 
@@ -74,7 +70,6 @@
     }
     .tab-btn.active { background: var(--fl-blue); color: white; box-shadow: 0 4px 15px rgba(37, 118, 208, 0.4); }
 
-    /* Frosted Glassmorphism Card - Wider Version */
     .card {
         background: rgba(255, 255, 255, 0.75) !important;
         backdrop-filter: blur(20px) saturate(160%);
@@ -84,7 +79,7 @@
         border-radius: 24px;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         width: 95%;
-        max-width: 550px; /* WIDER CARD */
+        max-width: 550px;
         text-align: center;
         border-top: 6px solid var(--fl-orange);
         margin-bottom: 12px;
@@ -99,12 +94,9 @@
     
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 26px; }
     .subtitle { color: #222; font-size: 14px; margin: 2px 0 18px 0; font-weight: 600; text-transform: uppercase; }
-    
     input { padding: 14px; font-size: 16px; width: 100%; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; background-color: var(--fl-accent); outline: none; margin-bottom: 10px; text-align: center; }
-    
     .search-container { position: relative; width: 100%; }
     
-    /* Dropdowns */
     #customDropdown, #customBreedDropdown { 
         position: absolute; top: 100%; left: 0; right: 0; 
         background: white; border-radius: 12px; max-height: 220px; 
@@ -117,13 +109,9 @@
     
     #searchBtn { padding: 14px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
     
-    /* Dark Mode Result Text */
-    #result { margin-top: 12px; font-size: 15px; font-weight: 800; color: #ffffff; min-height: 20px; text-shadow: none; filter: none; }
+    #result { margin-top: 12px; font-size: 15px; font-weight: 800; color: #ffffff; min-height: 20px; }
     #breedResult { width: 100%; display: flex; justify-content: center; align-items: center; min-height: 100px; margin-top: 10px; }
-    #breedResult p { color: rgba(255, 255, 255, 0.7); font-style: italic; }
 
-    /* Directory and Map - Ultra Wide */
-    #list-header { color: #fff; margin: 30px 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
     #location-list { width: 95%; max-width: 1200px; background: rgba(255, 255, 255, 0.95); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow: hidden; margin-top: 10px; }
 
     .directory-table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -176,15 +164,13 @@
 <div id="breed-section" class="card hidden" style="max-width: 550px;">
   <h2>FURRYLAND</h2>
   <p class="subtitle">Breed Guide</p>
-  
-<div class="breed-checker-container" style="margin-top: 20px; width: 100%; box-sizing: border-box; padding: 0 10px;">
-  <div class="search-container">
+  <div class="breed-checker-container" style="margin-top: 20px; width: 100%; box-sizing: border-box; padding: 0 10px;">
+    <div class="search-container">
         <input type="text" id="breedInput" placeholder="Type or Browse Breeds..." 
                onfocus="showBreedDropdown()" oninput="filterBreeds()" 
                onkeypress="if(event.key === 'Enter') checkBreed(this.value)">
         <div id="customBreedDropdown"></div>
     </div>
-
     <div id="breedResult" style="margin-top: 20px; min-height: 80px;">
        <p style="color:#999; font-style: italic;">Results will appear here...</p>
     </div>
@@ -297,15 +283,22 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-function setVibe(city) {
-    // Logic removed because background is now permanent CSS
-}
+  // --- NEW: TIMEZONE HELPER ---
+  function getLocalTime(stateAbbr) {
+    const timezones = {
+      'CA': 'America/Los_Angeles', 'OR': 'America/Los_Angeles', 'WA': 'America/Los_Angeles', 'NV': 'America/Los_Angeles',
+      'AZ': 'America/Phoenix', 'CO': 'America/Denver', 'UT': 'America/Denver', 'NM': 'America/Denver', 'ID': 'America/Boise',
+      'TX': 'America/Chicago', 'OK': 'America/Chicago', 'AR': 'America/Chicago', 'LA': 'America/Chicago', 'MO': 'America/Chicago',
+      'KS': 'America/Chicago', 'NE': 'America/Chicago', 'WI': 'America/Chicago', 'IL': 'America/Chicago', 'TN': 'America/Chicago',
+      'AL': 'America/Chicago', 'MS': 'America/Chicago', 'KY': 'America/Kentucky/Louisville',
+      'FL': 'America/New_York', 'GA': 'America/New_York', 'SC': 'America/New_York', 'NC': 'America/New_York', 'VA': 'America/New_York',
+      'PA': 'America/New_York', 'NJ': 'America/New_York', 'CT': 'America/New_York', 'MA': 'America/New_York', 'OH': 'America/New_York',
+      'MI': 'America/New_York', 'IN': 'America/Indianapolis', 'VT': 'America/New_York'
+    };
+    const tz = timezones[stateAbbr?.toUpperCase()] || 'America/New_York';
+    return new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true });
+  }
 
-function resetVibe() {
-    // Logic removed because background is now permanent CSS
-}
-
-  // --- BREED LOGIC ---
   async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
     try {
@@ -357,14 +350,12 @@ function resetVibe() {
     }
   }
 
-  // --- TURBO LOCATOR LOGIC ---
   async function loadData() {
     try {
         const batchSize = 10; 
         for (let i = 0; i < csvUrls.length; i += batchSize) {
             const batch = csvUrls.slice(i, i + batchSize);
             const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => r.text())));
-
             results.forEach(result => {
                 if (result.status === 'fulfilled') {
                     const csv = result.value;
@@ -381,7 +372,6 @@ function resetVibe() {
                                 state: m[5]?.trim() || "", 
                                 lat: m[6]?.trim() || null, 
                                 lng: m[7]?.replace(/\r/g, '').trim() || null,
-                                // NEW: Grab column 9 if it exists, otherwise empty
                                 closureNote: m[8] ? m[8].replace(/"/g, '').trim() : ""
                             });
                         }
@@ -391,38 +381,30 @@ function resetVibe() {
             let progress = Math.min(i + batchSize, csvUrls.length);
             document.getElementById('searchBtn').textContent = `Syncing (${progress}/${csvUrls.length})`;
         }
-
         document.getElementById('searchBtn').disabled = false;
         document.getElementById('searchBtn').textContent = "Search ZIP";
         plotHubs(); 
         buildCustomDropdown();
-    } catch (err) { 
-        console.error("Sync Error:", err);
-    }
+    } catch (err) { console.error("Sync Error:", err); }
   }
 
-  // --- SEARCH & NAVIGATION ---
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const res = document.getElementById('result');
     const list = document.getElementById('location-list');
     const head = document.getElementById('list-header');
     list.innerHTML = ""; res.innerHTML = "";
-
     const match = data.find(d => d.zip === zip);
     if (match) {
         res.innerText = "📍 Match Found: " + match.city;
-        setVibe(match.city);
         head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
         renderSingleRow(match, false);
-
         let hubCoords = rawCoords[match.city]; 
         let flyLat = hubCoords ? hubCoords[0] : (match.lat ? parseFloat(match.lat) : null);
         let flyLng = hubCoords ? hubCoords[1] : (match.lng ? parseFloat(match.lng) : null);
         if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 14);
         return;
     }
-
     if (zip.length === 5) {
         res.innerText = "🔍 Checking nearby...";
         try {
@@ -430,7 +412,6 @@ function resetVibe() {
             const zipData = await response.json();
             const tLat = parseFloat(zipData.places[0].latitude);
             const tLon = parseFloat(zipData.places[0].longitude);
-
             let closestDist = Infinity; let closestRow = null;
             data.forEach(row => {
                 let hubCoords = rawCoords[row.city];
@@ -441,29 +422,19 @@ function resetVibe() {
                     if (dist < closestDist) { closestDist = dist; closestRow = row; }
                 }
             });
-
             if (closestRow && closestDist <= 8) {
                 res.innerHTML = `<span style="color: #ff8080;">🛑 Neighbor Found: ${closestDist.toFixed(1)} miles away</span>`;
-                setVibe(closestRow.city);
                 head.classList.remove('hidden'); head.innerText = "NEIGHBOR ALERT";
                 list.innerHTML = `<div style="background:#fff5f5; padding:25px; border-radius:15px; text-align:center; color:#c53030; margin-bottom:20px; border:2px solid #feb2b2; line-height:1.8;">
                     <strong>🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong><br>ZIP ${zip} is ${closestDist.toFixed(1)} miles from FurryLand ${closestRow.city}.
                 </div>`;
                 renderSingleRow(closestRow, true);
-                
                 let hubCoords = rawCoords[closestRow.city];
                 let fLat = hubCoords ? hubCoords[0] : parseFloat(closestRow.lat);
                 let fLng = hubCoords ? hubCoords[1] : parseFloat(closestRow.lng);
                 map.flyTo([fLat, fLng], 12);
-            } else { 
-              res.innerText = "❌ No service within range."; 
-              resetSearchState(); 
-              resetVibe();
-            }
-        } catch (e) { 
-          res.innerText = "❌ Invalid ZIP."; 
-          resetSearchState(); 
-        }
+            } else { res.innerText = "❌ No service within range."; resetSearchState(); }
+        } catch (e) { res.innerText = "❌ Invalid ZIP."; resetSearchState(); }
     }
   }
 
@@ -482,7 +453,7 @@ function resetVibe() {
       const city = d.city.trim();
       if (city && rawCoords[city] && !markers[city]) {
         const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
-        markers[city] = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<strong>FurryLand ${city}</strong><br>📞 ${d.phone}<br><a href="${d.link}" target="_blank" class="action-link">OPEN MOEGO</a>`);
+        markers[city] = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<strong>FurryLand ${city}</strong><br>📞 ${d.phone}`);
       }
     });
   }
@@ -493,46 +464,26 @@ function resetVibe() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
   }
 
-// --- UPDATED: DUAL-MESSAGE & COLOR LOGIC ---
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
+    const hubTime = getLocalTime(m.state);
     
     let alertBox = "";
-
-    // 1. If Column I has text, decide the color based on the text.
     if (m.closureNote && m.closureNote.length > 2) {
-      
-      // BRANCH A: This is a Blackout ZIP (contains "BEFORE" or "AFTER")
-      if (m.closureNote.toUpperCase().includes("BEFORE") || m.closureNote.toUpperCase().includes("AFTER")) {
-        alertBox = `
-          <div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">
-            🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br>
-            <span style="font-weight:normal; font-size:13px;">${m.closureNote}</span>
-          </div>
-        `;
-      } 
-      // BRANCH B: This is an Advisory ZIP (everything else, like Traffic warnings)
-      else {
-        alertBox = `
-          <div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">
-            📢 TRAFFIC ADVISORY<br>
-            <span style="font-weight:normal; font-size:13px;">${m.closureNote}</span>
-          </div>
-        `;
+      const noteUpper = m.closureNote.toUpperCase();
+      if (noteUpper.includes("BEFORE") || noteUpper.includes("AFTER")) {
+        alertBox = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
+      } else {
+        alertBox = `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
       }
-    } 
-    // 3. Fallback: For any other valid ZIP that HAS NO note
-    else if (!isNeighbor) {
-      alertBox = `
-        <div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">
-          📢 TRAFFIC ADVISORY: Advise client that local traffic may affect arrival times.
-        </div>
-      `;
     }
 
     list.innerHTML = `
       ${alertBox}
+      <div style="background: rgba(37, 118, 208, 0.1); padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: center; border: 1px solid rgba(37, 118, 208, 0.2);">
+        <span style="color: var(--fl-blue); font-weight: 800; font-size: 13px;">🕒 CURRENT HUB TIME: ${hubTime}</span>
+      </div>
       <table class="directory-table">
         <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
         <tbody>
@@ -547,7 +498,7 @@ function resetVibe() {
 
   function buildCustomDropdown() {
     const dropdown = document.getElementById('customDropdown');
-    const cities = [...new Set(data.map(d => d.city.trim()))].filter(c => c && rawCoords[c]).sort();
+    const cities = [...new Set(data.map(d => d.city.trim()))].sort();
     dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>`).join('');
   }
 
@@ -556,7 +507,8 @@ function resetVibe() {
     document.getElementById('customDropdown').style.display = 'none';
     const match = data.find(d => d.city.trim() === city);
     if (match) { 
-        map.flyTo(rawCoords[city], 10); setVibe(city); 
+        let hubCoords = rawCoords[city];
+        if(hubCoords) map.flyTo(hubCoords, 10);
         document.getElementById('result').innerText = "📍 Hub Selected: " + city;
         document.getElementById('list-header').classList.remove('hidden');
         renderSingleRow(match);
@@ -571,13 +523,13 @@ function resetVibe() {
 
   function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); }
   
-function switchTab(t) { 
+  function switchTab(t) { 
     document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); 
     document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); 
     document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); 
     document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); 
     if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); 
-}
+  }
 
   window.onclick = (e) => { 
     if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none';
