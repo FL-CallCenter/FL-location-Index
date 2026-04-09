@@ -493,23 +493,36 @@ function resetVibe() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
   }
 
-  // --- REPLACED: DUAL-MESSAGE TABLE LOGIC ---
+// --- UPDATED: DUAL-MESSAGE & COLOR LOGIC ---
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
     
     let alertBox = "";
 
-    // 1. Check for RED Closure message from spreadsheet
+    // 1. If Column I has text, decide the color based on the text.
     if (m.closureNote && m.closureNote.length > 2) {
-      alertBox = `
-        <div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">
-          🛑 MAJOR ROAD CLOSURE<br>
-          <span style="font-weight:normal; font-size:13px;">${m.closureNote}</span>
-        </div>
-      `;
+      
+      // BRANCH A: This is a Blackout ZIP (contains "BEFORE" or "AFTER")
+      if (m.closureNote.toUpperCase().includes("BEFORE") || m.closureNote.toUpperCase().includes("AFTER")) {
+        alertBox = `
+          <div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">
+            🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br>
+            <span style="font-weight:normal; font-size:13px;">${m.closureNote}</span>
+          </div>
+        `;
+      } 
+      // BRANCH B: This is an Advisory ZIP (everything else, like Traffic warnings)
+      else {
+        alertBox = `
+          <div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">
+            📢 TRAFFIC ADVISORY<br>
+            <span style="font-weight:normal; font-size:13px;">${m.closureNote}</span>
+          </div>
+        `;
+      }
     } 
-    // 2. Otherwise, show BLUE Traffic message for everyone else (but not neighbors)
+    // 3. Fallback: For any other valid ZIP that HAS NO note
     else if (!isNeighbor) {
       alertBox = `
         <div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">
