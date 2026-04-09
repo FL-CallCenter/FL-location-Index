@@ -115,7 +115,7 @@
     #location-list { width: 95%; max-width: 1200px; background: rgba(255, 255, 255, 0.95); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow: hidden; margin-top: 10px; }
 
     .directory-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #eee; }
+    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; }
     .directory-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; font-size: 14px; vertical-align: middle; }
 
     .city-name { font-weight: 700; color: var(--fl-orange); font-size: 15px; }
@@ -181,7 +181,9 @@
   let data = [];
   let breedDatabase = [];
   let markers = {};
+  let clockInterval = null;
 
+  // --- PASTE YOUR DATA BELOW ---
   const rawCoords = {
     "Central Indiana": [39.7684, -86.1581], "Columbus-Auburn": [32.4676, -84.9877], "Columbus OH": [39.9612, -82.9988],
     "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940], "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
@@ -279,26 +281,104 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
   ];
+  // --- END DATA SECTION ---
 
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // --- NEW: TIMEZONE HELPER ---
-  function getLocalTime(stateAbbr) {
+// --- FINAL: FULL NAME & ABBREVIATION CLOCK ---
+  function updateLiveClock(stateInput, cityName = "") {
     const timezones = {
-      'CA': 'America/Los_Angeles', 'OR': 'America/Los_Angeles', 'WA': 'America/Los_Angeles', 'NV': 'America/Los_Angeles',
-      'AZ': 'America/Phoenix', 'CO': 'America/Denver', 'UT': 'America/Denver', 'NM': 'America/Denver', 'ID': 'America/Boise',
-      'TX': 'America/Chicago', 'OK': 'America/Chicago', 'AR': 'America/Chicago', 'LA': 'America/Chicago', 'MO': 'America/Chicago',
-      'KS': 'America/Chicago', 'NE': 'America/Chicago', 'WI': 'America/Chicago', 'IL': 'America/Chicago', 'TN': 'America/Chicago',
-      'AL': 'America/Chicago', 'MS': 'America/Chicago', 'KY': 'America/Kentucky/Louisville',
-      'FL': 'America/New_York', 'GA': 'America/New_York', 'SC': 'America/New_York', 'NC': 'America/New_York', 'VA': 'America/New_York',
-      'PA': 'America/New_York', 'NJ': 'America/New_York', 'CT': 'America/New_York', 'MA': 'America/New_York', 'OH': 'America/New_York',
-      'MI': 'America/New_York', 'IN': 'America/Indianapolis', 'VT': 'America/New_York'
-    };
-    const tz = timezones[stateAbbr?.toUpperCase()] || 'America/New_York';
-    return new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true });
-  }
+      // PACIFIC
+      'CA': 'America/Los_Angeles', 'CALIFORNIA': 'America/Los_Angeles',
+      'OR': 'America/Los_Angeles', 'OREGON': 'America/Los_Angeles',
+      'WA': 'America/Los_Angeles', 'WASHINGTON': 'America/Los_Angeles',
+      'NV': 'America/Los_Angeles', 'NEVADA': 'America/Los_Angeles',
+      'AK': 'America/Anchorage', 'ALASKA': 'America/Anchorage',
+      'HI': 'Pacific/Honolulu', 'HAWAII': 'Pacific/Honolulu',
 
+      // MOUNTAIN
+      'AZ': 'America/Phoenix', 'ARIZONA': 'America/Phoenix',
+      'CO': 'America/Denver', 'COLORADO': 'America/Denver',
+      'UT': 'America/Denver', 'UTAH': 'America/Denver',
+      'NM': 'America/Denver', 'NEW MEXICO': 'America/Denver',
+      'ID': 'America/Boise', 'IDAHO': 'America/Boise',
+      'MT': 'America/Denver', 'MONTANA': 'America/Denver',
+      'WY': 'America/Denver', 'WYOMING': 'America/Denver',
+
+      // CENTRAL
+      'TX': 'America/Chicago', 'TEXAS': 'America/Chicago',
+      'OK': 'America/Chicago', 'OKLAHOMA': 'America/Chicago',
+      'AR': 'America/Chicago', 'ARKANSAS': 'America/Chicago',
+      'LA': 'America/Chicago', 'LOUISIANA': 'America/Chicago',
+      'MO': 'America/Chicago', 'MISSOURI': 'America/Chicago',
+      'KS': 'America/Chicago', 'KANSAS': 'America/Chicago',
+      'NE': 'America/Chicago', 'NEBRASKA': 'America/Chicago',
+      'WI': 'America/Chicago', 'WISCONSIN': 'America/Chicago',
+      'IL': 'America/Chicago', 'ILLINOIS': 'America/Chicago',
+      'TN': 'America/Chicago', 'TENNESSEE': 'America/Chicago',
+      'AL': 'America/Chicago', 'ALABAMA': 'America/Chicago',
+      'MS': 'America/Chicago', 'MISSISSIPPI': 'America/Chicago',
+      'MN': 'America/Chicago', 'MINNESOTA': 'America/Chicago',
+      'IA': 'America/Chicago', 'IOWA': 'America/Chicago',
+      'ND': 'America/Chicago', 'NORTH DAKOTA': 'America/Chicago',
+      'SD': 'America/Chicago', 'SOUTH DAKOTA': 'America/Chicago',
+
+      // EASTERN
+      'FL': 'America/New_York', 'FLORIDA': 'America/New_York',
+      'GA': 'America/New_York', 'GEORGIA': 'America/New_York',
+      'SC': 'America/New_York', 'SOUTH CAROLINA': 'America/New_York',
+      'NC': 'America/New_York', 'NORTH CAROLINA': 'America/New_York',
+      'VA': 'America/New_York', 'VIRGINIA': 'America/New_York',
+      'PA': 'America/New_York', 'PENNSYLVANIA': 'America/New_York',
+      'NJ': 'America/New_York', 'NEW JERSEY': 'America/New_York',
+      'CT': 'America/New_York', 'CONNECTICUT': 'America/New_York',
+      'MA': 'America/New_York', 'MASSACHUSETTS': 'America/New_York',
+      'OH': 'America/New_York', 'OHIO': 'America/New_York',
+      'MI': 'America/New_York', 'MICHIGAN': 'America/New_York',
+      'IN': 'America/Indianapolis', 'INDIANA': 'America/Indianapolis',
+      'VT': 'America/New_York', 'VERMONT': 'America/New_York',
+      'KY': 'America/Kentucky/Louisville', 'KENTUCKY': 'America/Kentucky/Louisville',
+      'ME': 'America/New_York', 'MAINE': 'America/New_York',
+      'NH': 'America/New_York', 'NEW HAMPSHIRE': 'America/New_York',
+      'RI': 'America/New_York', 'RHODE ISLAND': 'America/New_York',
+      'NY': 'America/New_York', 'NEW YORK': 'America/New_York',
+      'DE': 'America/New_York', 'DELAWARE': 'America/New_York',
+      'MD': 'America/New_York', 'MARYLAND': 'America/New_York',
+      'WV': 'America/New_York', 'WEST VIRGINIA': 'America/New_York',
+      'DC': 'America/New_York', 'DISTRICT OF COLUMBIA': 'America/New_York'
+    };
+
+    // Clean the state name so it matches our list perfectly
+    let state = stateInput ? stateInput.trim().toUpperCase() : "";
+    
+    // Manual city fallback if Column F is somehow empty for a specific row
+    if (!state || state === "") {
+        if (cityName.includes("Portland")) state = "OREGON";
+        if (cityName.includes("Austin")) state = "TEXAS";
+    }
+
+    const tz = timezones[state] || 'America/New_York';
+    const now = new Date();
+
+    const timeString = now.toLocaleTimeString('en-US', { 
+        timeZone: tz, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: true 
+    });
+    
+    const tzLabel = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        timeZoneName: 'short'
+    }).formatToParts(now).find(p => p.type === 'timeZoneName').value;
+
+    const clockEl = document.getElementById('live-hub-clock');
+    if (clockEl) clockEl.innerText = `${timeString} ${tzLabel}`;
+  }
+  
+  // --- BREED LOGIC ---
   async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
     try {
@@ -445,6 +525,7 @@
     document.getElementById('result').innerText = "";
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
+    if(clockInterval) clearInterval(clockInterval);
   }
 
   function plotHubs() {
@@ -467,7 +548,9 @@
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
-    const hubTime = getLocalTime(m.state);
+    
+    if(clockInterval) clearInterval(clockInterval);
+    clockInterval = setInterval(() => updateLiveClock(m.state), 1000);
     
     let alertBox = "";
     if (m.closureNote && m.closureNote.length > 2) {
@@ -481,8 +564,8 @@
 
     list.innerHTML = `
       ${alertBox}
-      <div style="background: rgba(37, 118, 208, 0.1); padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: center; border: 1px solid rgba(37, 118, 208, 0.2);">
-        <span style="color: var(--fl-blue); font-weight: 800; font-size: 13px;">🕒 CURRENT HUB TIME: ${hubTime}</span>
+      <div style="background: rgba(37, 118, 208, 0.1); padding: 12px; border-radius: 12px; margin-bottom: 12px; text-align: center; border: 2px solid var(--fl-blue);">
+        <span style="color: var(--fl-blue); font-weight: 900; font-size: 16px; letter-spacing: 1px;">🕒 HUB LOCAL TIME: <span id="live-hub-clock">--:--:-- --</span></span>
       </div>
       <table class="directory-table">
         <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
@@ -494,6 +577,7 @@
           </tr>
         </tbody>
       </table>`;
+      updateLiveClock(m.state);
   }
 
   function buildCustomDropdown() {
@@ -521,7 +605,7 @@
     document.querySelectorAll('.dropdown-item').forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
   }
 
-  function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); }
+  function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); if(clockInterval) clearInterval(clockInterval); }
   
   function switchTab(t) { 
     document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); 
