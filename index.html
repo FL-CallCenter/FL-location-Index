@@ -430,7 +430,7 @@
     }
   }
 
-  async function loadData() {
+async function loadData() {
     try {
         const batchSize = 10; 
         for (let i = 0; i < csvUrls.length; i += batchSize) {
@@ -442,11 +442,21 @@
                     const rows = csv.split('\n');
                     rows.slice(1).forEach(row => {
                         const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+                        
                         if (m && m.length >= 5) {
+                            // --- THE GATEKEEPER START ---
+                            let phoneNumber = m[2] ? m[2].replace(/"/g, '').trim() : "";
+                            
+                            // If phone is blank or says OFFLINE, skip this location entirely
+                            if (phoneNumber === "" || phoneNumber.toUpperCase() === "OFFLINE") {
+                                return; 
+                            }
+                            // --- THE GATEKEEPER END ---
+
                             data.push({ 
                                 name: m[0].replace(/"/g, '').trim(), 
                                 zip: m[1].trim(), 
-                                phone: m[2]?.trim() || "No phone", 
+                                phone: phoneNumber, 
                                 link: m[3]?.replace(/"/g, '').trim() || "#", 
                                 city: m[4]?.trim() || "",
                                 state: m[5]?.trim() || "", 
