@@ -7,6 +7,8 @@
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
     :root { 
@@ -184,7 +186,7 @@
   let clockInterval = null;
 
   // --- PASTE YOUR DATA BELOW ---
-  const rawCoords = {
+const rawCoords = {
     "Central Indiana": [39.7684, -86.1581], "Columbus-Auburn": [32.4676, -84.9877], "Columbus OH": [39.9612, -82.9988],
     "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940], "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
     "NWA (Fayetteville)": [36.0822, -94.1719], "Raleigh-Durham": [35.8900, -78.8500], "Tyler-Longview": [32.3513, -95.3011],
@@ -206,81 +208,13 @@
     "Savannah": [32.0809, -81.0912], "West Michigan": [42.9634, -85.6681], "Wilmington": [34.2104, -77.8868],
     "Cleveland": [41.4993, -81.6944], "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778],
     "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786], "Hartford/New Haven": [41.5367, -72.8059],
-    "Central Texas (Waco)": [31.5493, -97.1467]
-  };
-
-  const csvUrls = [
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1280736540&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=131605005&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1500753982&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=446752663&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=485353994&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=397950327&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=635144428&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1767838695&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1076386464&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1710571999&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1694979049&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1903462545&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1243184247&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=417599010&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=249363358&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1996572760&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2027496995&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=725540742&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1525185712&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1550033892&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=963762001&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=730448198&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1540504964&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=205567237&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1449580229&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=270344733&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1264904892&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=224532765&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=852682701&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=501128595&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=426209112&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=392353823&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1159363307&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1116591924&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2095986021&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1057310910&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1528020874&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1652950939&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1789617640&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=157996514&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=501733820&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=323563834&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=246174883&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2071147823&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=729530518&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=13852972&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=55712936&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=831709095&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1166674507&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1826121485&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1592212111&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=989469982&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=302212128&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2016336892&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=716701373&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=977992752&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=298161339&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=450072031&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2041892595&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1863003536&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1591614006&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=911645826&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1616350219&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=544183757&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2052241812&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
-  ];
+    "Central Texas (Waco)": [31.5493, -97.1467],
+    "The Woodlands, TX": [30.1658, -95.4613], 
+    "Northeast Dallas Metro, TX": [33.0198, -96.6989], 
+    "Greater Toledo, OH": [41.6528, -83.5379], 
+    "North Metro Atlanta, GA": [34.0232, -84.3616], 
+    "Twin Cities Metro, Minn": [44.9657, -93.1775]
+};
   // --- END DATA SECTION ---
 
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
@@ -430,52 +364,70 @@
     }
   }
 
-async function loadData() {
-    try {
-        const batchSize = 10; 
-        for (let i = 0; i < csvUrls.length; i += batchSize) {
-            const batch = csvUrls.slice(i, i + batchSize);
-            const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => r.text())));
-            results.forEach(result => {
-                if (result.status === 'fulfilled') {
-                    const csv = result.value;
-                    const rows = csv.split('\n');
-                    rows.slice(1).forEach(row => {
-                        const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
-                        
-                        if (m && m.length >= 5) {
-                            // --- THE GATEKEEPER START ---
-                            let phoneNumber = m[2] ? m[2].replace(/"/g, '').trim() : "";
-                            
-                            // If phone is blank or says OFFLINE, skip this location entirely
-                            if (phoneNumber === "" || phoneNumber.toUpperCase() === "OFFLINE") {
-                                return; 
-                            }
-                            // --- THE GATEKEEPER END ---
+  // --- UPDATED LOCAL EXCEL LOAD DATA (SHEETJS) ---
+  async function loadData() {
+      try {
+          const searchBtn = document.getElementById('searchBtn');
+          searchBtn.textContent = "Syncing Local DB...";
+          searchBtn.disabled = true;
 
-                            data.push({ 
-                                name: m[0].replace(/"/g, '').trim(), 
-                                zip: m[1].trim(), 
-                                phone: phoneNumber, 
-                                link: m[3]?.replace(/"/g, '').trim() || "#", 
-                                city: m[4]?.trim() || "",
-                                state: m[5]?.trim() || "", 
-                                lat: m[6]?.trim() || null, 
-                                lng: m[7]?.replace(/\r/g, '').trim() || null,
-                                closureNote: m[8] ? m[8].replace(/"/g, '').trim() : ""
-                            });
-                        }
-                    });
-                }
-            });
-            let progress = Math.min(i + batchSize, csvUrls.length);
-            document.getElementById('searchBtn').textContent = `Syncing (${progress}/${csvUrls.length})`;
-        }
-        document.getElementById('searchBtn').disabled = false;
-        document.getElementById('searchBtn').textContent = "Search ZIP";
-        plotHubs(); 
-        buildCustomDropdown();
-    } catch (err) { console.error("Sync Error:", err); }
+          // Fetch the local Excel file 
+          const response = await fetch('database.xlsx');
+          if (!response.ok) {
+              throw new Error(`Failed to fetch database.xlsx: ${response.statusText}`);
+          }
+          
+          const arrayBuffer = await response.arrayBuffer();
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+          // Loop through every single tab (Sheet) in the workbook
+          workbook.SheetNames.forEach(sheetName => {
+              const worksheet = workbook.Sheets[sheetName];
+              const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+
+              rows.forEach((row, rowIndex) => {
+                  // SKIP THE BREEDS TAB SO THEY DON'T MIX WITH LOCATIONS
+                  if (sheetName.toUpperCase().includes("BREEDS")) return;
+
+                  // Skip header rows if present
+                  if (rowIndex === 0 && isNaN(Number(row[1]))) return; 
+
+                  if (row.length < 8) return; // Safeguard against completely empty rows
+
+                  let phoneNumber = row[2] ? String(row[2]).trim() : "";
+                
+                  // --- THE GATEKEEPER START ---
+                  // If phone is blank or says OFFLINE, skip this location entirely
+                  if (phoneNumber === "" || phoneNumber.toUpperCase() === "OFFLINE") {
+                      return; 
+                  }
+                  // --- THE GATEKEEPER END ---
+
+                  // Push exact formatting to global data array
+                  data.push({ 
+                      name: String(row[0] || "").trim(), 
+                      zip: String(row[1] || "").trim(), 
+                      phone: phoneNumber, 
+                      link: String(row[3] || "#").trim(), 
+                      city: String(row[4] || "").trim(),
+                      state: String(row[5] || "").trim(), 
+                      lat: row[6] ? String(row[6]).trim() : null, 
+                      lng: row[7] ? String(row[7]).trim() : null,
+                      closureNote: String(row[8] || "").trim()
+                  });
+              });
+          });
+
+          // Re-enable app
+          searchBtn.disabled = false;
+          searchBtn.textContent = "Search ZIP";
+          plotHubs(); 
+          buildCustomDropdown();
+
+      } catch (err) { 
+          console.error("Sync Error:", err); 
+          document.getElementById('searchBtn').textContent = "Database Sync Failed";
+      }
   }
 
   async function lookup() {
@@ -486,7 +438,7 @@ async function loadData() {
     list.innerHTML = ""; res.innerHTML = "";
     const match = data.find(d => d.zip === zip);
     if (match) {
-        res.innerText = "📍 Match Found: " + match.city;
+        res.innerText = "📍 Match Found: " + match.name;
         head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
         renderSingleRow(match, false);
         let hubCoords = rawCoords[match.city]; 
@@ -516,7 +468,7 @@ async function loadData() {
                 res.innerHTML = `<span style="color: #ff8080;">🛑 Neighbor Found: ${closestDist.toFixed(1)} miles away</span>`;
                 head.classList.remove('hidden'); head.innerText = "NEIGHBOR ALERT";
                 list.innerHTML = `<div style="background:#fff5f5; padding:25px; border-radius:15px; text-align:center; color:#c53030; margin-bottom:20px; border:2px solid #feb2b2; line-height:1.8;">
-                    <strong>🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong><br>ZIP ${zip} is ${closestDist.toFixed(1)} miles from FurryLand ${closestRow.city}.
+                    <strong>🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong><br>ZIP ${zip} is ${closestDist.toFixed(1)} miles from FurryLand ${closestRow.name}.
                 </div>`;
                 renderSingleRow(closestRow, true);
                 let hubCoords = rawCoords[closestRow.city];
@@ -544,7 +496,7 @@ async function loadData() {
       const city = d.city.trim();
       if (city && rawCoords[city] && !markers[city]) {
         const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
-        markers[city] = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<strong>FurryLand ${city}</strong><br>📞 ${d.phone}`);
+        markers[city] = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<strong>FurryLand ${d.name}</strong><br>📞 ${d.phone}`);
       }
     });
   }
@@ -581,7 +533,7 @@ async function loadData() {
         <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
         <tbody>
           <tr>
-            <td><span class="city-name">${m.city}</span>${badge}</td>
+            <td><span class="city-name">${m.name}</span>${badge}</td>
             <td>${m.phone} <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td>
             <td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
           </tr>
@@ -592,22 +544,22 @@ async function loadData() {
 
   function buildCustomDropdown() {
     const dropdown = document.getElementById('customDropdown');
-    const cities = [...new Set(data.map(d => d.city.trim()))].sort();
-    dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>`).join('');
-  }
+    const names = [...new Set(data.map(d => d.name.trim()))].sort();
+    dropdown.innerHTML = names.map(name => `<div class="dropdown-item" onclick="selectCity('${name}')">${name}</div>`).join('');
+}
 
-  function selectCity(city) {
-    document.getElementById('hubSearchInput').value = city;
+  function selectCity(name) {
+    document.getElementById('hubSearchInput').value = name;
     document.getElementById('customDropdown').style.display = 'none';
-    const match = data.find(d => d.city.trim() === city);
+    const match = data.find(d => d.name.trim() === name);
     if (match) { 
-        let hubCoords = rawCoords[city];
+        let hubCoords = rawCoords[match.city]; // Keeps map zooming tied to Column E
         if(hubCoords) map.flyTo(hubCoords, 10);
-        document.getElementById('result').innerText = "📍 Hub Selected: " + city;
+        document.getElementById('result').innerText = "📍 Hub Selected: " + name;
         document.getElementById('list-header').classList.remove('hidden');
         renderSingleRow(match);
     }
-  }
+}
 
   function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
   function filterDropdown() {
