@@ -406,7 +406,7 @@ async function loadData() {
 
                 data.push({ 
                     name: String(row[0] || "").trim(), 
-                    zip: String(row[1] || "").trim(), 
+                    zip: String(row[1] || "").trim().padStart(5, '0'), 
                     phone: phoneNumber, 
                     link: String(row[3] || "#").trim(), 
                     city: cityName,
