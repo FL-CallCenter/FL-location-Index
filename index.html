@@ -365,71 +365,73 @@ const rawCoords = {
   }
 
   // --- UPDATED LOCAL EXCEL LOAD DATA (SHEETJS) ---
-  async function loadData() {
-      try {
-          const searchBtn = document.getElementById('searchBtn');
-          searchBtn.textContent = "Syncing Local DB...";
-          searchBtn.disabled = true;
+async function loadData() {
+    try {
+        const searchBtn = document.getElementById('searchBtn');
+        searchBtn.textContent = "Syncing Local DB...";
+        searchBtn.disabled = true;
 
-          // Fetch the local Excel file 
-          const response = await fetch('database.xlsx');
-          if (!response.ok) {
-              throw new Error(`Failed to fetch database.xlsx: ${response.statusText}`);
-          }
-          
-          const arrayBuffer = await response.arrayBuffer();
-          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        // 1. THE CACHE BUSTER: Forces GitHub to pull the live file, not an old cached version
+        const response = await fetch('database.xlsx?v=' + new Date().getTime());
+        if (!response.ok) {
+            throw new Error(`Failed to fetch database.xlsx: ${response.statusText}`);
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 
-          // Loop through every single tab (Sheet) in the workbook
-          workbook.SheetNames.forEach(sheetName => {
-              const worksheet = workbook.Sheets[sheetName];
-              const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+        // 2. TAB AUDIT: This will list every single tab name it successfully reads
+        console.log("📂 TABS FOUND IN EXCEL:", workbook.SheetNames);
 
-              rows.forEach((row, rowIndex) => {
-                  // SKIP THE BREEDS TAB SO THEY DON'T MIX WITH LOCATIONS
-                  if (sheetName.toUpperCase().includes("BREEDS")) return;
+        // Loop through every single tab
+        workbook.SheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_json(worksheet, { header: 1, defval: "" });
 
-                  // Skip header rows if present
-                  if (rowIndex === 0 && isNaN(Number(row[1]))) return; 
+            rows.forEach((row, rowIndex) => {
+                // Skip header rows if present
+                if (rowIndex === 0 && isNaN(Number(row[1]))) return; 
+                if (row.length < 8) return; 
 
-                  if (row.length < 8) return; // Safeguard against completely empty rows
+                let phoneNumber = row[2] ? String(row[2]).trim() : "";
+                let cityName = String(row[4] || "Unknown City").trim();
 
-                  let phoneNumber = row[2] ? String(row[2]).trim() : "";
-                
-                  // --- THE GATEKEEPER START ---
-                  // If phone is blank or says OFFLINE, skip this location entirely
-                  if (phoneNumber === "" || phoneNumber.toUpperCase() === "OFFLINE") {
-                      return; 
-                  }
-                  // --- THE GATEKEEPER END ---
+                // --- THE GATEKEEPER START ---
+                if (phoneNumber === "" || phoneNumber.toUpperCase() === "OFFLINE") {
+                    // 3. SKIP AUDIT: Tells you exactly which cities were blocked
+                    console.warn(`🛑 SKIPPED in [${sheetName}]: ${cityName} (Phone is blank or OFFLINE)`);
+                    return; 
+                }
+                // --- THE GATEKEEPER END ---
 
-                  // Push exact formatting to global data array
-                  data.push({ 
-                      name: String(row[0] || "").trim(), 
-                      zip: String(row[1] || "").trim(), 
-                      phone: phoneNumber, 
-                      link: String(row[3] || "#").trim(), 
-                      city: String(row[4] || "").trim(),
-                      state: String(row[5] || "").trim(), 
-                      lat: row[6] ? String(row[6]).trim() : null, 
-                      lng: row[7] ? String(row[7]).trim() : null,
-                      closureNote: String(row[8] || "").trim()
-                  });
-              });
-          });
+                data.push({ 
+                    name: String(row[0] || "").trim(), 
+                    zip: String(row[1] || "").trim(), 
+                    phone: phoneNumber, 
+                    link: String(row[3] || "#").trim(), 
+                    city: cityName,
+                    state: String(row[5] || "").trim(), 
+                    lat: row[6] ? String(row[6]).trim() : null, 
+                    lng: row[7] ? String(row[7]).trim() : null,
+                    closureNote: String(row[8] || "").trim()
+                });
+            });
+        });
 
-          // Re-enable app
-          searchBtn.disabled = false;
-          searchBtn.textContent = "Search ZIP";
-          plotHubs(); 
-          buildCustomDropdown();
+        searchBtn.disabled = false;
+        searchBtn.textContent = "Search ZIP";
+        plotHubs(); 
+        buildCustomDropdown();
 
-      } catch (err) { 
-          console.error("Sync Error:", err); 
-          document.getElementById('searchBtn').textContent = "Database Sync Failed";
-      }
-  }
+        // 4. FINAL COUNT
+        console.log(`✅ SUCCESS: Loaded ${data.length} total active locations.`);
 
+    } catch (err) { 
+        console.error("Sync Error:", err); 
+        document.getElementById('searchBtn').textContent = "Database Sync Failed";
+    }
+}
+  
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const res = document.getElementById('result');
