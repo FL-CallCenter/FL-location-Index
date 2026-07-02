@@ -386,7 +386,7 @@ async function loadData() {
         // Loop through every single tab
         workbook.SheetNames.forEach(sheetName => {
             const worksheet = workbook.Sheets[sheetName];
-            const rows = XLSX.utils.sheet_json(worksheet, { header: 1, defval: "" });
+            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
             rows.forEach((row, rowIndex) => {
                 // Skip header rows if present
